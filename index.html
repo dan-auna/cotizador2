@@ -17,28 +17,14 @@
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .input-locked { background-color: #f1f5f9; cursor: not-allowed; color: #64748b; }
         .no-wrap { white-space: nowrap !important; }
-        
-        /* Ajuste para que el cotizador siempre tenga margen visual en móviles */
-        #canvas-area { 
-            display: flex; 
-            justify-content: center; 
-            align-items: flex-start; 
-            width: 100%; 
-            padding: 20px; /* Borde visual en la web */
-            overflow-x: auto; /* Permite scroll si el cel es muy pequeño */
-        }
-
-        #cotizacion-final {
-            min-width: 450px; /* Mantiene el tamaño profesional */
-            margin: 0 auto;
-        }
+        #canvas-area { display: flex; justify-content: center; align-items: flex-start; width: 100%; }
     </style>
 </head>
 <body class="bg-slate-50 p-4 md:p-8">
 
     <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
         
-        <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 h-fit">
+        <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center">
                     <div class="w-2 h-8 bg-auna-cyan mr-3 rounded-full"></div>
@@ -356,26 +342,23 @@
             }
 
             try {
-                // Ajuste de opciones para que no se pierdan bordes al exportar
+                // Configuración mejorada para compatibilidad con iPhone
                 const options = {
-                    quality: 1,
-                    pixelRatio: 2,
+                    quality: 0.95,
+                    pixelRatio: 2, // Ajustado a 2 para evitar archivos excesivamente pesados en móviles
                     width: 450,
-                    // Altura dinámica para capturar todo el contenido
-                    height: area.offsetHeight, 
                     backgroundColor: '#ffffff',
-                    style: {
-                        borderRadius: '0', // Eliminamos redondeo externo en el recorte para que sea una foto limpia
-                    }
                 };
 
+                // Generamos específicamente como JPEG para asegurar compatibilidad de MIME type
                 const dataUrl = await htmlToImage.toJpeg(area, options);
 
+                // Solución para iPhone/Android/Desktop:
                 const link = document.createElement('a');
                 const nombreArchivo = conDescuento ? `Cotizacion_Promo.jpg` : `Cotizacion_Regular.jpg`;
                 
+                // Forzamos el nombre y el tipo de descarga
                 link.setAttribute('download', nombreArchivo);
-                // Mantenemos la solución de compatibilidad para iPhone
                 link.setAttribute('href', dataUrl.replace("image/jpeg", "image/octet-stream"));
                 
                 document.body.appendChild(link);
