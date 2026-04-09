@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador Auna</title>
+      <link rel="icon" type="image/jpeg" href="https://res.cloudinary.com/dwxiuavqd/image/upload/v1774998253/468951353_1098106335437147_8489372296479282912_n_insezr.jpg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .bg-auna-cyan { background-color: #00acc1; }
+        .text-auna-cyan { color: #00acc1; }
+        .bg-auna-lime { background-color: #b0d235; }
+        .shadow-premium { box-shadow: 0 20px 50px rgba(0, 172, 193, 0.15); }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .input-locked { background-color: #f1f5f9; cursor: not-allowed; color: #64748b; }
+        .no-wrap { white-space: nowrap !important; }
+        #canvas-area { display: flex; justify-content: center; align-items: flex-start; width: 100%; }
+    </style>
+</head>
+<body class="bg-slate-50 p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
+        
+        <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center">
+                    <div class="w-2 h-8 bg-auna-cyan mr-3 rounded-full"></div>
+                    <h2 class="text-2xl font-bold text-gray-800">Panel del Asesor</h2>
+                </div>
+                <div class="flex items-center gap-2 bg-gray-100 p-1 rounded-xl">
+                    <button onclick="cambiarIntegrantes(-1)" class="w-10 h-10 bg-white rounded-lg shadow-sm font-bold text-gray-600 hover:text-red-500">-</button>
+                    <span id="contadorDisplay" class="px-3 font-bold text-auna-cyan">1</span>
+                    <button onclick="cambiarIntegrantes(1)" class="w-10 h-10 bg-white rounded-lg shadow-sm font-bold text-gray-600 hover:text-green-500">+</button>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Tipo de Plan:</label>
+                    <select id="planGlobal" onchange="actualizarTodoPorPlan()" class="w-full p-3 bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-cyan-500">
+                        <option value="Plan Auna salud Classic">Plan Auna salud Classic</option>
+                        <option value="Plan Auna salud Premium">Plan Auna salud Premium</option>
+                        <option value="Plan Auna salud Senior">Plan Auna salud Senior</option>
+                        <option value="Onco Pro">Onco Pro</option>
+                        <option value="Onco Plus">Onco Plus</option>
+                    </select>
+                </div>
+
+                <div id="contenedorIntegrantes" class="space-y-3 max-h-[350px] overflow-y-auto pr-2"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-600 mb-1">Vence el:</label>
+                        <input type="date" id="fechaLimite" onchange="actualizarPreview()" class="w-full p-3 bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-600 mb-1">Beneficio adicional:</label>
+                        <input type="text" id="beneficio" placeholder="Ej: + 1 mes gratis" oninput="actualizarPreview()" class="w-full p-3 bg-gray-50 border rounded-xl outline-none">
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-4">
+                    <button onclick="exportarCotizacion(true)" class="w-full bg-auna-cyan text-white py-4 rounded-2xl font-bold text-lg hover:bg-cyan-600 transition-all shadow-lg">
+                        <span>Descargar Con Descuento</span>
+                    </button>
+                    <button onclick="exportarCotizacion(false)" class="w-full bg-slate-700 text-white py-3 rounded-2xl font-bold text-md hover:bg-slate-800 transition-all">
+                        <span>Descargar Sin Descuento</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="canvas-area">
+            <div id="cotizacion-final" class="bg-white w-[450px] min-w-[450px] rounded-3xl overflow-hidden shadow-premium border border-gray-100">
+                <div class="p-8 pb-4 flex justify-between items-center">
+                    <img src="https://res.cloudinary.com/dwxiuavqd/image/upload/f_auto,q_auto/AUNA_1_cfdhdt" alt="Logo" class="h-10" crossorigin="anonymous">
+                    <span class="bg-cyan-50 text-auna-cyan text-[10px] font-bold px-3 py-1 rounded-full border border-cyan-100 uppercase">Cotización Oficial</span>
+                </div>
+
+                <div class="px-8 py-4">
+                    <h3 class="text-xl font-bold text-gray-800 leading-tight">Tu bienestar y el de tu familia es nuestra prioridad 🩺💙</h3>
+                </div>
+
+                <div class="mx-8 p-4 bg-auna-cyan rounded-2xl text-white mb-6">
+                    <p class="text-[10px] uppercase tracking-widest opacity-80">Plan Protegido</p>
+                    <h4 id="prev-plan" class="text-lg font-bold">Plan Auna salud Classic</h4>
+                </div>
+
+                <div id="lista-detallada" class="px-8 space-y-3"></div>
+
+                <div id="bloque-descuento">
+                    <div class="mx-8 mt-8 p-6 bg-slate-900 rounded-3xl text-white relative overflow-hidden shadow-xl">
+                        <div class="relative z-10">
+                            <p class="text-xs opacity-70 mb-1">Inversión mensual total</p>
+                            <div class="flex items-baseline gap-6 no-wrap">
+                                <span class="text-3xl font-bold text-auna-cyan no-wrap" id="total-promo">S/ 0.00</span>
+                                <span class="text-sm line-through opacity-40 no-wrap" id="total-reg">S/ 0.00</span>
+                            </div>
+                            <div class="mt-3">
+                                <span class="bg-auna-lime text-black text-[10px] font-bold px-3 py-1 rounded whitespace-nowrap uppercase tracking-tighter">Oferta Exclusiva</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center py-3">
+                        <p class="text-[12px] font-bold text-red-500 uppercase tracking-wide" id="texto-vence">Vence el --</p>
+                    </div>
+                    
+                    <div id="area-beneficio" class="mx-12 mb-6 p-3 bg-amber-50 border border-dashed border-amber-300 rounded-xl flex items-start gap-3 hidden">
+                        <span class="text-2xl">🎁</span>
+                        <div class="leading-tight">
+                            <p class="text-[10px] text-amber-900 font-bold uppercase whitespace-nowrap">Beneficio Exclusivo:</p>
+                            <p id="prev-beneficio" class="text-[12px] text-amber-950 font-medium mt-0.5"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="bloque-regular" class="hidden mx-8 mt-8 p-6 bg-gray-100 rounded-3xl text-gray-800 border border-gray-200">
+                    <p class="text-xs text-gray-500 mb-1">Inversión mensual regular</p>
+                    <span class="text-3xl font-bold no-wrap" id="total-solo-reg">S/ 0.00</span>
+                </div>
+
+                <div class="bg-auna-cyan p-4 text-center mt-6">
+                    <p class="text-[14px] text-white font-bold">Tu salud en las mejores manos.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tarifario = [
+            { plan: "Plan Auna salud Classic", rango: [0, 17], reg: 130.3, prom: 84.68 },
+            { plan: "Plan Auna salud Classic", rango: [18, 25], reg: 154.72, prom: 100.55 },
+            { plan: "Plan Auna salud Classic", rango: [26, 35], reg: 172.63, prom: 112.19 },
+            { plan: "Plan Auna salud Classic", rango: [36, 40], reg: 192.19, prom: 124.9 },
+            { plan: "Plan Auna salud Classic", rango: [41, 45], reg: 254.08, prom: 165.13 },
+            { plan: "Plan Auna salud Classic", rango: [46, 50], reg: 298.02, prom: 193.69 },
+            { plan: "Plan Auna salud Classic", rango: [51, 55], reg: 387.61, prom: 251.91 },
+            { plan: "Plan Auna salud Classic", rango: [56, 60], reg: 464.15, prom: 301.66 },
+            { plan: "Plan Auna salud Premium", rango: [0, 17], reg: 234.3, prom: 140.56 },
+            { plan: "Plan Auna salud Premium", rango: [18, 25], reg: 279.58, prom: 167.71 },
+            { plan: "Plan Auna salud Premium", rango: [26, 35], reg: 311.89, prom: 187.1 },
+            { plan: "Plan Auna salud Premium", rango: [36, 40], reg: 347.46, prom: 208.45 },
+            { plan: "Plan Auna salud Premium", rango: [41, 45], reg: 457.36, prom: 274.37 },
+            { plan: "Plan Auna salud Premium", rango: [46, 50], reg: 538.16, prom: 322.85 },
+            { plan: "Plan Auna salud Premium", rango: [51, 55], reg: 630.3, prom: 378.12 },
+            { plan: "Plan Auna salud Premium", rango: [56, 60], reg: 678.77, prom: 407.19 },
+            { plan: "Plan Auna salud Senior", rango: [61, 65], reg: 707.17, prom: 494.95 },
+            { plan: "Plan Auna salud Senior", rango: [66, 70], reg: 858.24, prom: 600.68 },
+            { plan: "Plan Auna salud Senior", rango: [71, 75], reg: 983.6, prom: 688.42 },
+            { plan: "Plan Auna salud Senior", rango: [76, 80], reg: 1129.85, prom: 790.78 },
+            { plan: "Plan Auna salud Senior", rango: [81, 120], reg: 1314.66, prom: 920.13 },
+            { plan: "Onco Pro", rango: [0, 17], reg: 43.91, prom: 35.12 },
+            { plan: "Onco Pro", rango: [18, 25], reg: 47.03, prom: 37.62 },
+            { plan: "Onco Pro", rango: [26, 26], reg: 78.92, prom: 39.45 },
+            { plan: "Onco Pro", rango: [27, 35], reg: 90.38, prom: 45.18 },
+            { plan: "Onco Pro", rango: [36, 40], reg: 92.26, prom: 46.13 },
+            { plan: "Onco Pro", rango: [41, 41], reg: 99.82, prom: 49.9 },
+            { plan: "Onco Pro", rango: [42, 43], reg: 102.7, prom: 51.34 },
+            { plan: "Onco Pro", rango: [44, 45], reg: 104.58, prom: 52.29 },
+            { plan: "Onco Pro", rango: [46, 46], reg: 112.29, prom: 56.13 },
+            { plan: "Onco Pro", rango: [47, 47], reg: 113.75, prom: 56.86 },
+            { plan: "Onco Pro", rango: [48, 48], reg: 115.04, prom: 57.51 },
+            { plan: "Onco Pro", rango: [49, 49], reg: 120.53, prom: 60.25 },
+            { plan: "Onco Pro", rango: [50, 50], reg: 130.1, prom: 65.03 },
+            { plan: "Onco Pro", rango: [51, 51], reg: 141.12, prom: 70.54 },
+            { plan: "Onco Pro", rango: [52, 52], reg: 156.85, prom: 78.41 },
+            { plan: "Onco Pro", rango: [53, 53], reg: 169.01, prom: 84.49 },
+            { plan: "Onco Pro", rango: [54, 54], reg: 176.41, prom: 88.19 },
+            { plan: "Onco Pro", rango: [55, 55], reg: 186.44, prom: 93.2 },
+            { plan: "Onco Pro", rango: [56, 56], reg: 192.19, prom: 96.08 },
+            { plan: "Onco Pro", rango: [57, 57], reg: 205.9, prom: 102.93 },
+            { plan: "Onco Pro", rango: [58, 58], reg: 215.63, prom: 107.79 },
+            { plan: "Onco Pro", rango: [59, 59], reg: 229.73, prom: 114.85 },
+            { plan: "Onco Pro", rango: [60, 60], reg: 243.13, prom: 121.54 },
+            { plan: "Onco Pro", rango: [61, 61], reg: 256.98, prom: 128.47 },
+            { plan: "Onco Plus", rango: [0, 17], reg: 53.58, prom: 42.86 },
+            { plan: "Onco Plus", rango: [18, 25], reg: 57.55, prom: 46.03 },
+            { plan: "Onco Plus", rango: [26, 26], reg: 131.72, prom: 65.84 },
+            { plan: "Onco Plus", rango: [27, 35], reg: 153.99, prom: 76.98 },
+            { plan: "Onco Plus", rango: [36, 36], reg: 160.49, prom: 80.23 },
+            { plan: "Onco Plus", rango: [37, 37], reg: 165.38, prom: 82.67 },
+            { plan: "Onco Plus", rango: [38, 38], reg: 166.97, prom: 83.47 },
+            { plan: "Onco Plus", rango: [39, 39], reg: 169.01, prom: 84.49 },
+            { plan: "Onco Plus", rango: [40, 40], reg: 171.3, prom: 85.63 },
+            { plan: "Onco Plus", rango: [41, 41], reg: 175.43, prom: 87.7 },
+            { plan: "Onco Plus", rango: [42, 42], reg: 178.48, prom: 89.22 },
+            { plan: "Onco Plus", rango: [43, 43], reg: 186, prom: 92.98 },
+            { plan: "Onco Plus", rango: [44, 44], reg: 188.52, prom: 94.23 },
+            { plan: "Onco Plus", rango: [45, 45], reg: 193.85, prom: 96.9 },
+            { plan: "Onco Plus", rango: [46, 46], reg: 201.98, prom: 100.97 },
+            { plan: "Onco Plus", rango: [47, 47], reg: 208.23, prom: 104.1 },
+            { plan: "Onco Plus", rango: [48, 48], reg: 215.93, prom: 107.95 },
+            { plan: "Onco Plus", rango: [49, 49], reg: 220.58, prom: 110.27 },
+            { plan: "Onco Plus", rango: [50, 50], reg: 234.15, prom: 117.06 },
+            { plan: "Onco Plus", rango: [51, 51], reg: 235.96, prom: 117.96 },
+            { plan: "Onco Plus", rango: [52, 52], reg: 243.14, prom: 121.54 },
+            { plan: "Onco Plus", rango: [53, 53], reg: 247.21, prom: 123.58 },
+            { plan: "Onco Plus", rango: [54, 54], reg: 250.51, prom: 125.23 },
+            { plan: "Onco Plus", rango: [55, 55], reg: 261.42, prom: 130.69 },
+            { plan: "Onco Plus", rango: [56, 56], reg: 276.39, prom: 138.17 },
+            { plan: "Onco Plus", rango: [57, 57], reg: 287.44, prom: 143.69 },
+            { plan: "Onco Plus", rango: [58, 58], reg: 306.17, prom: 153.06 },
+            { plan: "Onco Plus", rango: [59, 59], reg: 321.77, prom: 160.86 },
+            { plan: "Onco Plus", rango: [60, 60], reg: 337.16, prom: 168.55 }
+        ];
+
+        let currentIntegrantes = 1;
+
+        window.onload = () => {
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('fechaLimite').value = hoy;
+            renderizarCampos();
+        };
+
+        function autocompletarPrecios(id) {
+            const inputEdad = document.getElementById(`edad-${id}`);
+            const errorMsg = document.getElementById(`error-${id}`);
+            const planSeleccionado = document.getElementById('planGlobal').value;
+            const regInput = document.getElementById(`reg-${id}`);
+            const promInput = document.getElementById(`prom-${id}`);
+            inputEdad.value = inputEdad.value.replace(/[^0-9]/g, '');
+            const edad = parseInt(inputEdad.value);
+            let valid = true;
+            errorMsg.innerText = "";
+            if (!isNaN(edad)) {
+                if (planSeleccionado === "Plan Auna salud Senior") {
+                    if (edad <= 60) { errorMsg.innerText = "Este plan es para 61 años a más"; valid = false; }
+                } else {
+                    if (edad > 60) { errorMsg.innerText = "La edad máxima es 60"; valid = false; }
+                }
+                if (valid) {
+                    const match = tarifario.find(t => t.plan === planSeleccionado && edad >= t.rango[0] && edad <= t.rango[1]);
+                    if (match) { regInput.value = match.reg.toFixed(2); promInput.value = match.prom.toFixed(2); }
+                    else { regInput.value = "0.00"; promInput.value = "0.00"; }
+                } else { regInput.value = "0.00"; promInput.value = "0.00"; }
+            }
+            actualizarPreview();
+        }
+
+        function actualizarTodoPorPlan() {
+            for (let i = 1; i <= currentIntegrantes; i++) { autocompletarPrecios(i); }
+            actualizarPreview();
+        }
+
+        function cambiarIntegrantes(delta) {
+            let nuevoValor = currentIntegrantes + delta;
+            if (nuevoValor >= 1 && nuevoValor <= 4) {
+                currentIntegrantes = nuevoValor;
+                document.getElementById('contadorDisplay').innerText = currentIntegrantes;
+                renderizarCampos();
+            }
+        }
+
+        function renderizarCampos() {
+            const container = document.getElementById('contenedorIntegrantes');
+            const valoresActuales = [];
+            for (let i = 1; i <= 4; i++) {
+                valoresActuales.push({
+                    edad: document.getElementById(`edad-${i}`)?.value || '',
+                    reg: document.getElementById(`reg-${i}`)?.value || '0.00',
+                    prom: document.getElementById(`prom-${i}`)?.value || '0.00'
+                });
+            }
+            container.innerHTML = '';
+            for (let i = 1; i <= currentIntegrantes; i++) {
+                container.innerHTML += `
+                    <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
+                        <div class="grid grid-cols-3 gap-2 items-end">
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">Edad</label>
+                                <input type="text" inputmode="numeric" id="edad-${i}" value="${valoresActuales[i-1].edad}" oninput="autocompletarPrecios(${i})" placeholder="Ej: 25" class="w-full p-2 bg-white border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">P. Regular</label>
+                                <input type="text" id="reg-${i}" value="${valoresActuales[i-1].reg}" readonly class="w-full p-2 input-locked border rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">P. Promo</label>
+                                <input type="text" id="prom-${i}" value="${valoresActuales[i-1].prom}" readonly class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold">
+                            </div>
+                        </div>
+                        <p id="error-${i}" class="text-[10px] text-red-500 font-bold italic"></p>
+                    </div>`;
+            }
+            actualizarPreview();
+        }
+
+        function formatearFecha(fechaStr) {
+            if(!fechaStr) return "fin de mes";
+            const opciones = { day: 'numeric', month: 'long' };
+            const fecha = new Date(fechaStr + "T12:00:00");
+            return fecha.toLocaleDateString('es-ES', opciones);
+        }
+
+        function actualizarPreview() {
+            document.getElementById('prev-plan').innerText = document.getElementById('planGlobal').value;
+            const fechaVal = document.getElementById('fechaLimite').value;
+            document.getElementById('texto-vence').innerText = `Vence el ${formatearFecha(fechaVal)}`;
+            const b = document.getElementById('beneficio').value;
+            const ab = document.getElementById('area-beneficio');
+            if(b.trim()) { ab.classList.remove('hidden'); document.getElementById('prev-beneficio').innerText = b; }
+            else { ab.classList.add('hidden'); }
+            let tR = 0, tP = 0;
+            const lista = document.getElementById('lista-detallada');
+            lista.innerHTML = '';
+            for (let i = 1; i <= currentIntegrantes; i++) {
+                const e = document.getElementById(`edad-${i}`)?.value || '?';
+                const r = parseFloat(document.getElementById(`reg-${i}`)?.value || 0);
+                const p = parseFloat(document.getElementById(`prom-${i}`)?.value || 0);
+                tR += r; tP += p;
+                lista.innerHTML += `<div class="flex justify-between items-center text-sm border-b border-gray-100 pb-2 integrante-item">
+                    <span class="text-gray-600 font-medium mr-4">Integrante ${i} (${e} años)</span>
+                    <div class="text-right min-w-fit">
+                        <span class="block text-[10px] line-through text-gray-300 no-wrap price-reg">S/ ${r.toFixed(2)}</span>
+                        <span class="text-auna-cyan font-bold no-wrap price-promo">S/ ${p.toFixed(2)}</span>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('total-reg').innerText = `S/ ${tR.toFixed(2)}`;
+            document.getElementById('total-promo').innerText = `S/ ${tP.toFixed(2)}`;
+            document.getElementById('total-solo-reg').innerText = `S/ ${tR.toFixed(2)}`;
+        }
+
+        async function exportarCotizacion(conDescuento) {
+            const area = document.getElementById('cotizacion-final');
+            const bloqueDescuento = document.getElementById('bloque-descuento');
+            const bloqueRegular = document.getElementById('bloque-regular');
+            const items = document.querySelectorAll('.integrante-item');
+
+            if (!conDescuento) {
+                bloqueDescuento.classList.add('hidden');
+                bloqueRegular.classList.remove('hidden');
+                items.forEach(item => {
+                    const pr = item.querySelector('.price-reg');
+                    pr.classList.remove('line-through', 'text-gray-300', 'text-[10px]');
+                    pr.classList.add('text-gray-800', 'font-bold');
+                    item.querySelector('.price-promo').classList.add('hidden');
+                });
+            }
+
+            try {
+                const options = {
+                    quality: 0.95,
+                    pixelRatio: 3,
+                    width: 450,
+                    height: area.scrollHeight,
+                    backgroundColor: '#ffffff',
+                    style: {
+                        transform: 'scale(1)',
+                        left: '0',
+                        top: '0',
+                        margin: '0 auto',
+                        position: 'relative'
+                    }
+                };
+
+                const dataUrl = await htmlToImage.toJpeg(area, options);
+
+                const link = document.createElement('a');
+                link.download = conDescuento ? `Cotizacion_Promo.jpg` : `Cotizacion_Regular.jpg`;
+                link.href = dataUrl;
+                link.click();
+            } catch (error) {
+                console.error(error);
+                alert("Error al generar imagen.");
+            } finally {
+                bloqueDescuento.classList.remove('hidden');
+                bloqueRegular.classList.add('hidden');
+                items.forEach(item => {
+                    const pr = item.querySelector('.price-reg');
+                    pr.classList.add('line-through', 'text-gray-300', 'text-[10px]');
+                    pr.classList.remove('text-gray-800', 'font-bold');
+                    item.querySelector('.price-promo').classList.remove('hidden');
+                });
+                actualizarPreview();
+            }
+        }
+    </script>
+</body>
+</html>
