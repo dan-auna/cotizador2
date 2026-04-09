@@ -18,17 +18,17 @@
         .input-locked { background-color: #f1f5f9; cursor: not-allowed; color: #64748b; }
         .no-wrap { white-space: nowrap !important; }
         
-        /* Ajuste para que la cotización no se pegue a los bordes en celulares */
+        /* Contenedor principal que asegura espacio en todos los bordes */
         #canvas-area { 
             display: flex; 
             justify-content: center; 
             align-items: flex-start; 
             width: 100%;
-            overflow: hidden; /* Evita scroll horizontal innecesario */
-            padding: 10px 0;
+            overflow: hidden; 
+            padding: 20px 0 60px 0; /* Añadimos 60px de espacio libre abajo */
         }
 
-        /* Contenedor de escala: encoge la cotización si la pantalla es pequeña */
+        /* Contenedor de escala para adaptación en celulares */
         .wrapper-cotizacion {
             display: flex;
             justify-content: center;
@@ -38,16 +38,15 @@
 
         @media (max-width: 500px) {
             .wrapper-cotizacion {
-                /* Escala la cotización al 85% o 90% para que respire en los bordes */
                 transform: scale(0.85); 
-                margin-bottom: -100px; /* Ajusta el espacio que queda abajo por el scale */
+                margin-bottom: -80px; /* Ajuste compensatorio de altura */
             }
         }
         
         @media (max-width: 400px) {
             .wrapper-cotizacion {
                 transform: scale(0.75);
-                margin-bottom: -180px;
+                margin-bottom: -150px;
             }
         }
     </style>
@@ -56,7 +55,7 @@
 
     <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
         
-        <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+        <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 h-fit">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center">
                     <div class="w-2 h-8 bg-auna-cyan mr-3 rounded-full"></div>
@@ -164,7 +163,6 @@
     </div>
 
     <script>
-        // --- TARIFARIO Y LÓGICA (Sin cambios) ---
         const tarifario = [
             { plan: "Plan Auna salud Classic", rango: [0, 17], reg: 130.3, prom: 84.68 },
             { plan: "Plan Auna salud Classic", rango: [18, 25], reg: 154.72, prom: 100.55 },
@@ -262,9 +260,9 @@
             errorMsg.innerText = "";
             if (!isNaN(edad)) {
                 if (planSeleccionado === "Plan Auna salud Senior") {
-                    if (edad <= 60) { errorMsg.innerText = "Este plan es para 61 años a más"; valid = false; }
+                    if (edad <= 60) { errorMsg.innerText = "Mínimo 61 años"; valid = false; }
                 } else {
-                    if (edad > 60) { errorMsg.innerText = "La edad máxima es 60"; valid = false; }
+                    if (edad > 60) { errorMsg.innerText = "Máximo 60 años"; valid = false; }
                 }
                 if (valid) {
                     const match = tarifario.find(t => t.plan === planSeleccionado && edad >= t.rango[0] && edad <= t.rango[1]);
@@ -309,11 +307,11 @@
                                 <input type="text" inputmode="numeric" id="edad-${i}" value="${valoresActuales[i-1].edad}" oninput="autocompletarPrecios(${i})" placeholder="Ej: 25" class="w-full p-2 bg-white border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 outline-none">
                             </div>
                             <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase">P. Regular</label>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">Reg.</label>
                                 <input type="text" id="reg-${i}" value="${valoresActuales[i-1].reg}" readonly class="w-full p-2 input-locked border rounded-lg text-sm">
                             </div>
                             <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase">P. Promo</label>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">Promo</label>
                                 <input type="text" id="prom-${i}" value="${valoresActuales[i-1].prom}" readonly class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold">
                             </div>
                         </div>
@@ -377,28 +375,22 @@
             }
 
             try {
-                const options = {
+                const dataUrl = await htmlToImage.toJpeg(area, {
                     quality: 0.95,
                     pixelRatio: 2, 
                     width: 450,
                     backgroundColor: '#ffffff',
-                };
-
-                const dataUrl = await htmlToImage.toJpeg(area, options);
+                });
 
                 const link = document.createElement('a');
-                const nombreArchivo = conDescuento ? `Cotizacion_Promo.jpg` : `Cotizacion_Regular.jpg`;
-                
-                link.setAttribute('download', nombreArchivo);
+                link.setAttribute('download', conDescuento ? `Cotizacion_Promo.jpg` : `Cotizacion_Regular.jpg`);
                 link.setAttribute('href', dataUrl.replace("image/jpeg", "image/octet-stream"));
-                
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
 
             } catch (error) {
                 console.error(error);
-                alert("Error al generar imagen.");
             } finally {
                 bloqueDescuento.classList.remove('hidden');
                 bloqueRegular.classList.add('hidden');
