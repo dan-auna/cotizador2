@@ -342,27 +342,29 @@
             }
 
             try {
+                // Configuración mejorada para compatibilidad con iPhone
                 const options = {
                     quality: 0.95,
-                    pixelRatio: 3,
+                    pixelRatio: 2, // Ajustado a 2 para evitar archivos excesivamente pesados en móviles
                     width: 450,
-                    height: area.scrollHeight,
                     backgroundColor: '#ffffff',
-                    style: {
-                        transform: 'scale(1)',
-                        left: '0',
-                        top: '0',
-                        margin: '0 auto',
-                        position: 'relative'
-                    }
                 };
 
+                // Generamos específicamente como JPEG para asegurar compatibilidad de MIME type
                 const dataUrl = await htmlToImage.toJpeg(area, options);
 
+                // Solución para iPhone/Android/Desktop:
                 const link = document.createElement('a');
-                link.download = conDescuento ? `Cotizacion_Promo.jpg` : `Cotizacion_Regular.jpg`;
-                link.href = dataUrl;
+                const nombreArchivo = conDescuento ? `Cotizacion_Promo.jpg` : `Cotizacion_Regular.jpg`;
+                
+                // Forzamos el nombre y el tipo de descarga
+                link.setAttribute('download', nombreArchivo);
+                link.setAttribute('href', dataUrl.replace("image/jpeg", "image/octet-stream"));
+                
+                document.body.appendChild(link);
                 link.click();
+                document.body.removeChild(link);
+
             } catch (error) {
                 console.error(error);
                 alert("Error al generar imagen.");
