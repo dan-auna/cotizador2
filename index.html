@@ -415,11 +415,11 @@
                 if (modoActuarial) {
                     container.innerHTML += `
                         <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
-                            <div class="grid grid-cols-4 gap-2 items-end">
-                                <div class="col-span-2">
-                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Fecha de Nacimiento</label>
-                                    <input type="date" id="fnac-${i}" value="${valoresActuales[i-1].fnac}" oninput="autocompletarPrecios(${i})" class="w-full p-2 bg-white border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 outline-none">
-                                </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">Fecha de Nacimiento</label>
+                                <input type="date" id="fnac-${i}" value="${valoresActuales[i-1].fnac}" oninput="autocompletarPrecios(${i})" class="w-full p-2 bg-white border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 outline-none">
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 items-end">
                                 <div>
                                     <label class="text-[10px] font-bold text-cyan-500 uppercase">Edad Actuarial</label>
                                     <div class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold h-[38px] flex items-center">
@@ -427,11 +427,14 @@
                                     </div>
                                 </div>
                                 <div>
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Reg.</label>
+                                    <input type="text" id="reg-${i}" value="${valoresActuales[i-1].reg}" readonly class="w-full p-2 input-locked border rounded-lg text-sm">
+                                </div>
+                                <div>
                                     <label class="text-[10px] font-bold text-gray-400 uppercase">Promo</label>
                                     <input type="text" id="prom-${i}" value="${valoresActuales[i-1].prom}" readonly class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold">
                                 </div>
                             </div>
-                            <input type="hidden" id="reg-${i}" value="${valoresActuales[i-1].reg}">
                             <p id="error-${i}" class="text-[10px] text-red-500 font-bold italic"></p>
                         </div>`;
                 } else {
