@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotizador Auna</title>
-      <link rel="icon" type="image/jpeg" href="https://res.cloudinary.com/dwxiuavqd/image/upload/v1774998253/468951353_1098106335437147_8489372296479282912_n_insezr.jpg">
+    <link rel="icon" type="image/jpeg" href="https://res.cloudinary.com/dwxiuavqd/image/upload/v1774998253/468951353_1098106335437147_8489372296479282912_n_insezr.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -17,18 +17,16 @@
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .input-locked { background-color: #f1f5f9; cursor: not-allowed; color: #64748b; }
         .no-wrap { white-space: nowrap !important; }
-        
-        /* Contenedor principal que asegura espacio en todos los bordes */
+
         #canvas-area { 
             display: flex; 
             justify-content: center; 
             align-items: flex-start; 
             width: 100%;
             overflow: hidden; 
-            padding: 20px 0 60px 0; /* Añadimos 60px de espacio libre abajo */
+            padding: 20px 0 60px 0;
         }
 
-        /* Contenedor de escala para adaptación en celulares */
         .wrapper-cotizacion {
             display: flex;
             justify-content: center;
@@ -39,7 +37,7 @@
         @media (max-width: 500px) {
             .wrapper-cotizacion {
                 transform: scale(0.85); 
-                margin-bottom: -80px; /* Ajuste compensatorio de altura */
+                margin-bottom: -80px;
             }
         }
         
@@ -49,6 +47,36 @@
                 margin-bottom: -150px;
             }
         }
+
+        /* Toggle switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider { background-color: #00acc1; }
+        input:checked + .toggle-slider:before { transform: translateX(20px); }
     </style>
 </head>
 <body class="bg-slate-50 p-4 md:p-8">
@@ -56,7 +84,7 @@
     <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
         
         <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 h-fit">
-            <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
                     <div class="w-2 h-8 bg-auna-cyan mr-3 rounded-full"></div>
                     <h2 class="text-2xl font-bold text-gray-800">Panel del Asesor</h2>
@@ -66,6 +94,18 @@
                     <span id="contadorDisplay" class="px-3 font-bold text-auna-cyan">1</span>
                     <button onclick="cambiarIntegrantes(1)" class="w-10 h-10 bg-white rounded-lg shadow-sm font-bold text-gray-600 hover:text-green-500">+</button>
                 </div>
+            </div>
+
+            <!-- Toggle Edad Actuarial -->
+            <div class="flex items-center justify-between mb-5 px-4 py-3 bg-cyan-50 border border-cyan-100 rounded-xl">
+                <div>
+                    <p class="text-sm font-bold text-gray-700">Edad actuarial</p>
+                    <p class="text-[11px] text-gray-400">Calcula la edad redondeada al año más cercano</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggleActuarial" onchange="cambiarModoActuarial()">
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
             
             <div class="space-y-4">
@@ -241,6 +281,43 @@
         ];
 
         let currentIntegrantes = 1;
+        let modoActuarial = false;
+
+        // Calcula la edad actuarial: edad en años + 0.5 si ya pasaron 6+ meses desde el último cumpleaños, luego se redondea al entero más cercano (Math.round de edad + fracción del año)
+        function calcularEdadActuarial(fechaNac) {
+            if (!fechaNac) return null;
+            const hoy = new Date();
+            const nac = new Date(fechaNac + "T00:00:00");
+            if (isNaN(nac)) return null;
+
+            // Años cumplidos
+            let añosCumplidos = hoy.getFullYear() - nac.getFullYear();
+            const mesHoy = hoy.getMonth();
+            const mesNac = nac.getMonth();
+            const diaHoy = hoy.getDate();
+            const diaNac = nac.getDate();
+
+            // Verificar si ya cumplió años este año
+            const yaCompleto = (mesHoy > mesNac) || (mesHoy === mesNac && diaHoy >= diaNac);
+            if (!yaCompleto) añosCumplidos--;
+
+            // Fecha del último cumpleaños
+            let ultimoCump = new Date(hoy.getFullYear(), nac.getMonth(), nac.getDate());
+            if (!yaCompleto) ultimoCump = new Date(hoy.getFullYear() - 1, nac.getMonth(), nac.getDate());
+
+            // Fecha del próximo cumpleaños
+            let proximoCump = new Date(ultimoCump);
+            proximoCump.setFullYear(proximoCump.getFullYear() + 1);
+
+            // Fracción del año transcurrida desde último cumpleaños
+            const totalMs = proximoCump - ultimoCump;
+            const transcurridoMs = hoy - ultimoCump;
+            const fraccion = transcurridoMs / totalMs;
+
+            // Edad actuarial = año cumplido + fracción, redondeada al entero más cercano
+            const edadActuarial = Math.round(añosCumplidos + fraccion);
+            return edadActuarial;
+        }
 
         window.onload = () => {
             const hoy = new Date().toISOString().split('T')[0];
@@ -248,27 +325,58 @@
             renderizarCampos();
         };
 
+        function cambiarModoActuarial() {
+            modoActuarial = document.getElementById('toggleActuarial').checked;
+            renderizarCampos();
+        }
+
         function autocompletarPrecios(id) {
-            const inputEdad = document.getElementById(`edad-${id}`);
             const errorMsg = document.getElementById(`error-${id}`);
             const planSeleccionado = document.getElementById('planGlobal').value;
             const regInput = document.getElementById(`reg-${id}`);
             const promInput = document.getElementById(`prom-${id}`);
-            inputEdad.value = inputEdad.value.replace(/[^0-9]/g, '');
-            const edad = parseInt(inputEdad.value);
-            let valid = true;
+            const edadDisplay = document.getElementById(`edad-display-${id}`);
             errorMsg.innerText = "";
-            if (!isNaN(edad)) {
-                if (planSeleccionado === "Plan Auna salud Senior") {
-                    if (edad <= 60) { errorMsg.innerText = "Mínimo 61 años"; valid = false; }
-                } else {
-                    if (edad > 60) { errorMsg.innerText = "Máximo 60 años"; valid = false; }
+
+            let edad;
+
+            if (modoActuarial) {
+                const fechaInput = document.getElementById(`fnac-${id}`);
+                if (!fechaInput || !fechaInput.value) {
+                    regInput.value = "0.00"; promInput.value = "0.00";
+                    if (edadDisplay) edadDisplay.innerText = "--";
+                    actualizarPreview(); return;
                 }
-                if (valid) {
-                    const match = tarifario.find(t => t.plan === planSeleccionado && edad >= t.rango[0] && edad <= t.rango[1]);
-                    if (match) { regInput.value = match.reg.toFixed(2); promInput.value = match.prom.toFixed(2); }
-                    else { regInput.value = "0.00"; promInput.value = "0.00"; }
-                } else { regInput.value = "0.00"; promInput.value = "0.00"; }
+                edad = calcularEdadActuarial(fechaInput.value);
+                if (edad === null) {
+                    regInput.value = "0.00"; promInput.value = "0.00";
+                    if (edadDisplay) edadDisplay.innerText = "--";
+                    actualizarPreview(); return;
+                }
+                if (edadDisplay) edadDisplay.innerText = edad + " años";
+            } else {
+                const inputEdad = document.getElementById(`edad-${id}`);
+                inputEdad.value = inputEdad.value.replace(/[^0-9]/g, '');
+                edad = parseInt(inputEdad.value);
+                if (isNaN(edad)) {
+                    regInput.value = "0.00"; promInput.value = "0.00";
+                    actualizarPreview(); return;
+                }
+            }
+
+            let valid = true;
+            if (planSeleccionado === "Plan Auna salud Senior") {
+                if (edad <= 60) { errorMsg.innerText = "Mínimo 61 años"; valid = false; }
+            } else {
+                if (edad > 60) { errorMsg.innerText = "Máximo 60 años"; valid = false; }
+            }
+
+            if (valid) {
+                const match = tarifario.find(t => t.plan === planSeleccionado && edad >= t.rango[0] && edad <= t.rango[1]);
+                if (match) { regInput.value = match.reg.toFixed(2); promInput.value = match.prom.toFixed(2); }
+                else { regInput.value = "0.00"; promInput.value = "0.00"; }
+            } else {
+                regInput.value = "0.00"; promInput.value = "0.00";
             }
             actualizarPreview();
         }
@@ -289,35 +397,72 @@
 
         function renderizarCampos() {
             const container = document.getElementById('contenedorIntegrantes');
+
+            // Guardar valores actuales
             const valoresActuales = [];
             for (let i = 1; i <= 4; i++) {
                 valoresActuales.push({
                     edad: document.getElementById(`edad-${i}`)?.value || '',
+                    fnac: document.getElementById(`fnac-${i}`)?.value || '',
                     reg: document.getElementById(`reg-${i}`)?.value || '0.00',
                     prom: document.getElementById(`prom-${i}`)?.value || '0.00'
                 });
             }
+
             container.innerHTML = '';
+
             for (let i = 1; i <= currentIntegrantes; i++) {
-                container.innerHTML += `
-                    <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
-                        <div class="grid grid-cols-3 gap-2 items-end">
-                            <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase">Edad</label>
-                                <input type="text" inputmode="numeric" id="edad-${i}" value="${valoresActuales[i-1].edad}" oninput="autocompletarPrecios(${i})" placeholder="Ej: 25" class="w-full p-2 bg-white border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 outline-none">
+                if (modoActuarial) {
+                    container.innerHTML += `
+                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
+                            <div class="grid grid-cols-4 gap-2 items-end">
+                                <div class="col-span-2">
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Fecha de Nacimiento</label>
+                                    <input type="date" id="fnac-${i}" value="${valoresActuales[i-1].fnac}" oninput="autocompletarPrecios(${i})" class="w-full p-2 bg-white border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-cyan-500 uppercase">Edad Actuarial</label>
+                                    <div class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold h-[38px] flex items-center">
+                                        <span id="edad-display-${i}">--</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Promo</label>
+                                    <input type="text" id="prom-${i}" value="${valoresActuales[i-1].prom}" readonly class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold">
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase">Reg.</label>
-                                <input type="text" id="reg-${i}" value="${valoresActuales[i-1].reg}" readonly class="w-full p-2 input-locked border rounded-lg text-sm">
+                            <input type="hidden" id="reg-${i}" value="${valoresActuales[i-1].reg}">
+                            <p id="error-${i}" class="text-[10px] text-red-500 font-bold italic"></p>
+                        </div>`;
+                } else {
+                    container.innerHTML += `
+                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
+                            <div class="grid grid-cols-3 gap-2 items-end">
+                                <div>
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Edad</label>
+                                    <input type="text" inputmode="numeric" id="edad-${i}" value="${valoresActuales[i-1].edad}" oninput="autocompletarPrecios(${i})" placeholder="Ej: 25" class="w-full p-2 bg-white border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Reg.</label>
+                                    <input type="text" id="reg-${i}" value="${valoresActuales[i-1].reg}" readonly class="w-full p-2 input-locked border rounded-lg text-sm">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Promo</label>
+                                    <input type="text" id="prom-${i}" value="${valoresActuales[i-1].prom}" readonly class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold">
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase">Promo</label>
-                                <input type="text" id="prom-${i}" value="${valoresActuales[i-1].prom}" readonly class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold">
-                            </div>
-                        </div>
-                        <p id="error-${i}" class="text-[10px] text-red-500 font-bold italic"></p>
-                    </div>`;
+                            <p id="error-${i}" class="text-[10px] text-red-500 font-bold italic"></p>
+                        </div>`;
+                }
             }
+
+            // Recalcular precios si hay fechas guardadas en modo actuarial
+            if (modoActuarial) {
+                for (let i = 1; i <= currentIntegrantes; i++) {
+                    if (valoresActuales[i-1].fnac) autocompletarPrecios(i);
+                }
+            }
+
             actualizarPreview();
         }
 
@@ -336,16 +481,26 @@
             const ab = document.getElementById('area-beneficio');
             if(b.trim()) { ab.classList.remove('hidden'); document.getElementById('prev-beneficio').innerText = b; }
             else { ab.classList.add('hidden'); }
+
             let tR = 0, tP = 0;
             const lista = document.getElementById('lista-detallada');
             lista.innerHTML = '';
+
             for (let i = 1; i <= currentIntegrantes; i++) {
-                const e = document.getElementById(`edad-${i}`)?.value || '?';
+                let etiquetaEdad;
+                if (modoActuarial) {
+                    const edadEl = document.getElementById(`edad-display-${i}`);
+                    etiquetaEdad = edadEl ? edadEl.innerText : '--';
+                    if (etiquetaEdad === '--') etiquetaEdad = '? años';
+                } else {
+                    const e = document.getElementById(`edad-${i}`)?.value || '?';
+                    etiquetaEdad = `${e} años`;
+                }
                 const r = parseFloat(document.getElementById(`reg-${i}`)?.value || 0);
                 const p = parseFloat(document.getElementById(`prom-${i}`)?.value || 0);
                 tR += r; tP += p;
                 lista.innerHTML += `<div class="flex justify-between items-center text-sm border-b border-gray-100 pb-2 integrante-item">
-                    <span class="text-gray-600 font-medium mr-4">Integrante ${i} (${e} años)</span>
+                    <span class="text-gray-600 font-medium mr-4">Integrante ${i} (${etiquetaEdad})</span>
                     <div class="text-right min-w-fit">
                         <span class="block text-[10px] line-through text-gray-300 no-wrap price-reg">S/ ${r.toFixed(2)}</span>
                         <span class="text-auna-cyan font-bold no-wrap price-promo">S/ ${p.toFixed(2)}</span>
