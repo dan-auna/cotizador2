@@ -1,3 +1,23 @@
+
+
+url: https://script.google.com/macros/s/AKfycbzg3p6evPFrvfWIAwa6MoGMEtuoyBLU2-wWapn-Ic4lYY9fzuVzrT-zAaOg18XoxvKBaA/exec
+url de eduardo: https://script.google.com/macros/s/AKfycbw2RCv8T8Clj1NGVKL9q7p34AL5fVkHSpBB-1QncSoeeeoMZ5OEsceUnhz6vLie8H9v/exec
+ID implementación: AKfycbzg3p6evPFrvfWIAwa6MoGMEtuoyBLU2-wWapn-Ic4lYY9fzuVzrT-zAaOg18XoxvKBaA
+
+
+
+* Mejoras:
+- Implementar cotizar con edad o con fecha de nacimiento (Con fórmula para edad contractarial de seguros)
+- Agregar lugar de barrido o referencia de dónde lo conociste
+
+
+
+
+
+.---------------------------------------------
+
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -298,7 +318,6 @@
         ];
 
         let currentIntegrantes = 1;
-        let modoPanel = 'asesor';
         let modoActuarial = false;
 
         // Calcula la edad actuarial: edad en años + 0.5 si ya pasaron 6+ meses desde el último cumpleaños, luego se redondea al entero más cercano (Math.round de edad + fracción del año)
@@ -432,91 +451,49 @@
             for (let i = 1; i <= currentIntegrantes; i++) {
                 const esCliente = (modoPanel === 'cliente');
                 if (modoActuarial) {
-                    if (esCliente) {
-                        container.innerHTML += `
-                            <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
+                    container.innerHTML += `
+                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">Fecha de Nacimiento</label>
+                                <input type="date" id="fnac-${i}" value="${valoresActuales[i-1].fnac}" oninput="autocompletarPrecios(${i})" class="w-full p-2 bg-white border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 outline-none">
+                            </div>
+                            <div class="grid grid-cols-${esCliente ? '2' : '3'} gap-2 items-end">
                                 <div>
-                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Fecha de Nacimiento</label>
-                                    <input type="date" id="fnac-${i}" value="${valoresActuales[i-1].fnac}" oninput="autocompletarPrecios(${i})" class="w-full p-2 bg-white border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 outline-none">
-                                </div>
-                                <div class="grid grid-cols-2 gap-2 items-end">
-                                    <div>
-                                        <label class="text-[10px] font-bold text-cyan-500 uppercase">Edad Actuarial</label>
-                                        <div class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold h-[38px] flex items-center">
-                                            <span id="edad-display-${i}">--</span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-400 uppercase">Reg.</label>
-                                        <input type="text" id="reg-${i}" value="${valoresActuales[i-1].reg}" readonly class="w-full p-2 input-locked border rounded-lg text-sm">
+                                    <label class="text-[10px] font-bold text-cyan-500 uppercase">Edad Actuarial</label>
+                                    <div class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold h-[38px] flex items-center">
+                                        <span id="edad-display-${i}">--</span>
                                     </div>
                                 </div>
-                                <input type="hidden" id="prom-${i}" value="${valoresActuales[i-1].prom}">
-                                <p id="error-${i}" class="text-[10px] text-red-500 font-bold italic"></p>
-                            </div>`;
-                    } else {
-                        container.innerHTML += `
-                            <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
                                 <div>
-                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Fecha de Nacimiento</label>
-                                    <input type="date" id="fnac-${i}" value="${valoresActuales[i-1].fnac}" oninput="autocompletarPrecios(${i})" class="w-full p-2 bg-white border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 outline-none">
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Reg.</label>
+                                    <input type="text" id="reg-${i}" value="${valoresActuales[i-1].reg}" readonly class="w-full p-2 input-locked border rounded-lg text-sm">
                                 </div>
-                                <div class="grid grid-cols-3 gap-2 items-end">
-                                    <div>
-                                        <label class="text-[10px] font-bold text-cyan-500 uppercase">Edad Actuarial</label>
-                                        <div class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold h-[38px] flex items-center">
-                                            <span id="edad-display-${i}">--</span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-400 uppercase">Reg.</label>
-                                        <input type="text" id="reg-${i}" value="${valoresActuales[i-1].reg}" readonly class="w-full p-2 input-locked border rounded-lg text-sm">
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-400 uppercase">Promo</label>
-                                        <input type="text" id="prom-${i}" value="${valoresActuales[i-1].prom}" readonly class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold">
-                                    </div>
-                                </div>
-                                <p id="error-${i}" class="text-[10px] text-red-500 font-bold italic"></p>
-                            </div>`;
-                    }
+                                ${esCliente ? '<input type="hidden" id="prom-' + i + '" value="' + valoresActuales[i-1].prom + '">' : `<div>
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Promo</label>
+                                    <input type="text" id="prom-${i}" value="${valoresActuales[i-1].prom}" readonly class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold">
+                                </div>`}
+                            </div>
+                            <p id="error-${i}" class="text-[10px] text-red-500 font-bold italic"></p>
+                        </div>`;
                 } else {
-                    if (esCliente) {
-                        container.innerHTML += `
-                            <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
-                                <div class="grid grid-cols-2 gap-2 items-end">
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-400 uppercase">Edad</label>
-                                        <input type="text" inputmode="numeric" id="edad-${i}" value="${valoresActuales[i-1].edad}" oninput="autocompletarPrecios(${i})" placeholder="Ej: 25" class="w-full p-2 bg-white border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-400 uppercase">Reg.</label>
-                                        <input type="text" id="reg-${i}" value="${valoresActuales[i-1].reg}" readonly class="w-full p-2 input-locked border rounded-lg text-sm">
-                                    </div>
+                    container.innerHTML += `
+                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
+                            <div class="grid grid-cols-${esCliente ? '2' : '3'} gap-2 items-end">
+                                <div>
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Edad</label>
+                                    <input type="text" inputmode="numeric" id="edad-${i}" value="${valoresActuales[i-1].edad}" oninput="autocompletarPrecios(${i})" placeholder="Ej: 25" class="w-full p-2 bg-white border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 outline-none">
                                 </div>
-                                <input type="hidden" id="prom-${i}" value="${valoresActuales[i-1].prom}">
-                                <p id="error-${i}" class="text-[10px] text-red-500 font-bold italic"></p>
-                            </div>`;
-                    } else {
-                        container.innerHTML += `
-                            <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
-                                <div class="grid grid-cols-3 gap-2 items-end">
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-400 uppercase">Edad</label>
-                                        <input type="text" inputmode="numeric" id="edad-${i}" value="${valoresActuales[i-1].edad}" oninput="autocompletarPrecios(${i})" placeholder="Ej: 25" class="w-full p-2 bg-white border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-400 uppercase">Reg.</label>
-                                        <input type="text" id="reg-${i}" value="${valoresActuales[i-1].reg}" readonly class="w-full p-2 input-locked border rounded-lg text-sm">
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-bold text-gray-400 uppercase">Promo</label>
-                                        <input type="text" id="prom-${i}" value="${valoresActuales[i-1].prom}" readonly class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold">
-                                    </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Reg.</label>
+                                    <input type="text" id="reg-${i}" value="${valoresActuales[i-1].reg}" readonly class="w-full p-2 input-locked border rounded-lg text-sm">
                                 </div>
-                                <p id="error-${i}" class="text-[10px] text-red-500 font-bold italic"></p>
-                            </div>`;
-                    }
+                                ${esCliente ? '<input type="hidden" id="prom-' + i + '" value="' + valoresActuales[i-1].prom + '">' : `<div>
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase">Promo</label>
+                                    <input type="text" id="prom-${i}" value="${valoresActuales[i-1].prom}" readonly class="w-full p-2 input-locked border rounded-lg text-sm text-cyan-700 font-bold">
+                                </div>`}
+                            </div>
+                            <p id="error-${i}" class="text-[10px] text-red-500 font-bold italic"></p>
+                        </div>`;
                 }
             }
 
@@ -668,7 +645,7 @@
                 document.getElementById('botonesAsesor').classList.add('hidden');
                 document.getElementById('botonesCliente').classList.remove('hidden');
             }
-            renderizarCampos();
+            actualizarPreview();
         }
 
         document.addEventListener('click', function(e) {
